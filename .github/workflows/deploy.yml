@@ -2,7 +2,7 @@ name: Deploy Vite app to GitHub Pages
 
 on:
   push:
-    branches: [ main ]
+    branches: [ $default-branch ]   # works whether your default is main or master
   workflow_dispatch:
 
 permissions:
@@ -36,7 +36,7 @@ jobs:
         working-directory: baritrack-app
         run: |
           npm run build
-          cp dist/index.html dist/404.html
+          cp dist/index.html dist/404.html  # SPA fallback
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
