@@ -11,13 +11,14 @@ export const generateChartData = (chartTimeframe, currentDay, userData, weightEn
       const weeks = day / 7;
       const expectedWeight = calculateExpectedWeight(weeks, userData.surgeryWeight, userData.weightUnit, userData.surgeryType);
 
-      let actualEntry = weightEntries.find(entry => entry.day === day);
+      // Find the exact entry for this day
+      const actualEntry = weightEntries.find(entry => entry.day === day);
       let actualWeight = null;
 
       if (day === 0) {
         actualWeight = startWeight;
-      } else {
-        actualWeight = actualEntry ? actualEntry.weight : null;
+      } else if (actualEntry) {
+        actualWeight = actualEntry.weight;
       }
 
       data.push({
@@ -33,13 +34,14 @@ export const generateChartData = (chartTimeframe, currentDay, userData, weightEn
     for (let week = 0; week <= maxWeeks; week++) {
       const expectedWeight = calculateExpectedWeight(week, userData.surgeryWeight, userData.weightUnit, userData.surgeryType);
 
-      let actualEntry = weightEntries.find(entry => entry.week === week);
+      // Find the exact entry for this week
+      const actualEntry = weightEntries.find(entry => entry.week === week);
       let actualWeight = null;
 
       if (week === 0) {
         actualWeight = startWeight;
-      } else {
-        actualWeight = actualEntry ? actualEntry.weight : null;
+      } else if (actualEntry) {
+        actualWeight = actualEntry.weight;
       }
 
       data.push({

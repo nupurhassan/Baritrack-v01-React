@@ -29,7 +29,8 @@ const App = () => {
       setCurrentDay(newDay);
 
       const currentWeek = Math.floor(newDay / 7);
-      const updatedEntries = weightEntries.filter(entry => entry.week !== currentWeek && entry.day !== newDay);
+      // Remove only the entry for this specific day if it exists (to avoid duplicates)
+      const updatedEntries = weightEntries.filter(entry => entry.day !== newDay);
       updatedEntries.push({
         week: currentWeek,
         day: newDay,
