@@ -37,7 +37,7 @@ const DashboardPage = ({
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold flex items-center">
-              Good morning! <span className="ml-2">👋</span>
+              Good morning! <span className="ml-2"></span>
             </h1>
             <p className="text-gray-400">{weeksSinceSurgery} weeks post-surgery</p>
           </div>
@@ -56,7 +56,7 @@ const DashboardPage = ({
         {offTrack && (
           <div className="bg-orange-900/30 border border-orange-500/50 rounded-2xl p-4">
             <div className="flex items-start space-x-3">
-              <span className="text-orange-500 text-xl">⚠️</span>
+              <span className="text-orange-500 text-xl"></span>
               <div>
                 <h3 className="font-semibold text-orange-400">Gentle Check-In</h3>
                 <p className="text-sm text-gray-300 mt-1">
