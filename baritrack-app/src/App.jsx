@@ -28,33 +28,33 @@ const App = () => {
         surgeryDate: '2024-01-15',
         gender: 'Male',
         age: '35',
-        surgeryWeight: '250',
-        height: '70',
+        surgeryWeight: '450',
+        height: '63',
         race: '',
-        surgeryType: 'Gastric Bypass',
+        surgeryType: 'Duodenal Switch (BPD-DS)',
         weightUnit: 'lbs',
         heightUnit: 'in'
       },
       weightEntries: [
-        { week: 1, day: 7, weight: 242, date: '2024-01-22' },
-        { week: 2, day: 14, weight: 235, date: '2024-01-29' },
-        { week: 3, day: 21, weight: 228, date: '2024-02-05' }
+        { week: 1, day: 7, weight: 442, date: '2024-01-22' },
+        { week: 2, day: 14, weight: 435, date: '2024-01-29' },
+        { week: 3, day: 21, weight: 428, date: '2024-02-05' }
       ],
       currentDay: 21
     }
   ]);
 
-  // User-specific data
+  // Current session user data
   const [userData, setUserData] = useState({
     surgeryDate: '',
     gender: '',
     age: '',
-    surgeryWeight: '',
-    height: '',
+    surgeryWeight: '450',
+    height: '63',
     race: '',
-    surgeryType: '',
-    weightUnit: 'kg',
-    heightUnit: 'cm'
+    surgeryType: 'Duodenal Switch (BPD-DS)',
+    weightUnit: 'lbs',
+    heightUnit: 'in'
   });
   const [weightEntries, setWeightEntries] = useState([]);
   const [newWeight, setNewWeight] = useState('');
@@ -81,45 +81,14 @@ const App = () => {
         }
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Load user data
+  // Helper to load data for a user record into state
   const loadUserData = (user) => {
-    if (user.userData) {
-      setUserData(user.userData);
-    }
-    if (user.weightEntries) {
-      setWeightEntries(user.weightEntries);
-    }
-    if (user.currentDay !== undefined) {
-      setCurrentDay(user.currentDay);
-    }
-  };
-
-  // Save user data
-  const saveUserData = () => {
-    if (currentUser) {
-      const updatedUsers = users.map(user => {
-        if (user.id === currentUser.id) {
-          return {
-            ...user,
-            userData,
-            weightEntries,
-            currentDay,
-            hasCompletedOnboarding: true
-          };
-        }
-        return user;
-      });
-      setUsers(updatedUsers);
-      setCurrentUser({
-        ...currentUser,
-        userData,
-        weightEntries,
-        currentDay,
-        hasCompletedOnboarding: true
-      });
-    }
+    setUserData(user.userData || {});
+    setWeightEntries(user.weightEntries || []);
+    setCurrentDay(user.currentDay || 0);
   };
 
   // Handle login
@@ -137,6 +106,7 @@ const App = () => {
       } else {
         setCurrentScreen('onboarding');
       }
+
       return true;
     }
     return false;
@@ -159,12 +129,12 @@ const App = () => {
         surgeryDate: '',
         gender: '',
         age: '',
-        surgeryWeight: '',
-        height: '',
+        surgeryWeight: '450',
+        height: '63',
         race: '',
-        surgeryType: '',
-        weightUnit: 'kg',
-        heightUnit: 'cm'
+        surgeryType: 'Duodenal Switch (BPD-DS)',
+        weightUnit: 'lbs',
+        heightUnit: 'in'
       },
       weightEntries: [],
       currentDay: 0
@@ -175,119 +145,81 @@ const App = () => {
     setCurrentUser(newUser);
     localStorage.setItem('isAuthenticated', 'true');
     localStorage.setItem('currentUserId', newUser.id.toString());
+    loadUserData(newUser);
     setCurrentScreen('onboarding');
     return true;
   };
 
-  // Handle logout
   const handleLogout = () => {
-    setIsAuthenticated(false);
-    setCurrentUser(null);
     localStorage.removeItem('isAuthenticated');
     localStorage.removeItem('currentUserId');
-    setCurrentScreen('login');
-    // Reset user data
-    setUserData({
-      surgeryDate: '',
-      gender: '',
-      age: '',
-      surgeryWeight: '',
-      height: '',
-      race: '',
-      surgeryType: '',
-      weightUnit: 'kg',
-      heightUnit: 'cm'
-    });
-    setWeightEntries([]);
-    setCurrentDay(0);
-    setOnboardingStep(1);
-  };
-
-  // Handle weight submission
-  const handleWeightSubmit = () => {
-    if (newWeight) {
-      const newDay = currentDay + 1;
-      setCurrentDay(newDay);
-
-      const currentWeek = Math.floor(newDay / 7);
-      const updatedEntries = weightEntries.filter(entry => entry.day !== newDay);
-      updatedEntries.push({
-        week: currentWeek,
-        day: newDay,
-        weight: parseFloat(newWeight),
-        date: new Date().toISOString().split('T')[0]
-      });
-
-      setWeightEntries(updatedEntries);
-      setNewWeight('');
-
-      // Save to user data
-      if (currentUser) {
-        const updatedUsers = users.map(user => {
-          if (user.id === currentUser.id) {
-            return {
-              ...user,
-              weightEntries: updatedEntries,
-              currentDay: newDay
-            };
-          }
-          return user;
-        });
-        setUsers(updatedUsers);
-      }
-    }
+    setIsAuthenticated(false);
+    setCurrentUser(null);
+    setCurrentScreen('welcome');
   };
 
   // Handle onboarding completion
   const handleOnboardingComplete = () => {
-    saveUserData();
+    if (!currentUser) return;
+    const updated = users.map(u =>
+      u.id === currentUser.id
+        ? { ...u, hasCompletedOnboarding: true, userData }
+        : u
+    );
+    setUsers(updated);
     setCurrentScreen('dashboard');
   };
 
-  // Handle profile reset
+  // Handle weight submit
+  const handleWeightSubmit = () => {
+    if (!newWeight) return;
+    const today = new Date();
+    const entry = {
+      week: Math.floor(currentDay / 7),
+      day: currentDay,
+      weight: parseFloat(newWeight),
+      date: today.toISOString().split('T')[0]
+    };
+    const updatedEntries = [...weightEntries, entry];
+    setWeightEntries(updatedEntries);
+    setNewWeight('');
+
+    if (!currentUser) return;
+    const updatedUsers = users.map(u =>
+      u.id === currentUser.id ? { ...u, weightEntries: updatedEntries } : u
+    );
+    setUsers(updatedUsers);
+  };
+
+  // Reset demo data
   const handleReset = () => {
-    if (currentUser) {
-      const resetData = {
-        surgeryDate: '',
-        gender: '',
-        age: '',
-        surgeryWeight: '',
-        height: '',
-        race: '',
-        surgeryType: '',
-        weightUnit: 'kg',
-        heightUnit: 'cm'
-      };
-
-      const updatedUsers = users.map(user => {
-        if (user.id === currentUser.id) {
-          return {
-            ...user,
-            userData: resetData,
-            weightEntries: [],
-            currentDay: 0,
-            hasCompletedOnboarding: false
-          };
-        }
-        return user;
-      });
-
-      setUsers(updatedUsers);
-      setUserData(resetData);
-      setWeightEntries([]);
-      setCurrentDay(0);
-      setOnboardingStep(1);
-      setCurrentScreen('onboarding');
-    }
+    setUserData({
+      surgeryDate: '',
+      gender: '',
+      age: '',
+      surgeryWeight: '450',
+      height: '63',
+      race: '',
+      surgeryType: 'Duodenal Switch (BPD-DS)',
+      weightUnit: 'lbs',
+      heightUnit: 'in'
+    });
+    setWeightEntries([]);
+    setCurrentDay(0);
+    setChartTimeframe('weekly');
   };
 
   return (
-    <div className="font-sans min-h-screen">
-      {currentScreen === 'welcome' && (
-        <WelcomePage onStart={() => setCurrentScreen('login')} />
+    <div className="min-h-screen bg-black text-white">
+      {currentScreen === 'welcome' && !isAuthenticated && (
+        <WelcomePage
+          onLogin={() => setCurrentScreen('login')}
+          onSignUp={() => setCurrentScreen('signup')}
+          onForgotPassword={() => setCurrentScreen('forgot-password')}
+        />
       )}
 
-      {currentScreen === 'login' && (
+      {currentScreen === 'login' && !isAuthenticated && (
         <LoginPage
           onLogin={handleLogin}
           onSignUp={() => setCurrentScreen('signup')}
@@ -330,7 +262,6 @@ const App = () => {
           chartTimeframe={chartTimeframe}
           setChartTimeframe={setChartTimeframe}
           onNavigate={setCurrentScreen}
-          currentUser={currentUser}
         />
       )}
 

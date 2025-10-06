@@ -9,6 +9,82 @@ const OnboardingPage = ({ step, userData, setUserData, onNext, onPrev, onComplet
     }
   };
 
+  // Handle feet and inches separately
+  const handleHeightChange = (type, value) => {
+    if (userData.heightUnit === 'in') {
+      const currentFeet = Math.floor(parseFloat(userData.height || 0) / 12);
+      const currentInches = parseFloat(userData.height || 0) % 12;
+
+      if (type === 'feet') {
+        const newHeight = (parseFloat(value || 0) * 12) + currentInches;
+        setUserData({...userData, height: newHeight.toString()});
+      } else if (type === 'inches') {
+        const newHeight = (currentFeet * 12) + parseFloat(value || 0);
+        setUserData({...userData, height: newHeight.toString()});
+      }
+    } else {
+      setUserData({...userData, height: value});
+    }
+  };
+
+  const getFeetFromHeight = () => {
+    if (userData.heightUnit === 'in' && userData.height) {
+      return Math.floor(parseFloat(userData.height) / 12);
+    }
+    return '';
+  };
+
+  const getInchesFromHeight = () => {
+    if (userData.heightUnit === 'in' && userData.height) {
+      return Math.round(parseFloat(userData.height) % 12);
+    }
+    return '';
+  };
+
+  const handleUnitChange = (unitType, value) => {
+    if (unitType === 'weight') {
+      // Convert existing weight value when changing units
+      const currentWeight = parseFloat(userData.surgeryWeight);
+      let convertedWeight = currentWeight;
+
+      if (currentWeight) {
+        if (userData.weightUnit === 'kg' && value === 'lbs') {
+          // Converting from kg to lbs
+          convertedWeight = currentWeight * 2.20462;
+        } else if (userData.weightUnit === 'lbs' && value === 'kg') {
+          // Converting from lbs to kg
+          convertedWeight = currentWeight / 2.20462;
+        }
+      }
+
+      setUserData({
+        ...userData,
+        weightUnit: value,
+        surgeryWeight: convertedWeight ? convertedWeight.toFixed(1) : ''
+      });
+    } else if (unitType === 'height') {
+      // Convert existing height value when changing units
+      const currentHeight = parseFloat(userData.height);
+      let convertedHeight = currentHeight;
+
+      if (currentHeight) {
+        if (userData.heightUnit === 'cm' && value === 'in') {
+          // Converting from cm to inches
+          convertedHeight = currentHeight / 2.54;
+        } else if (userData.heightUnit === 'in' && value === 'cm') {
+          // Converting from inches to cm
+          convertedHeight = currentHeight * 2.54;
+        }
+      }
+
+      setUserData({
+        ...userData,
+        heightUnit: value,
+        height: convertedHeight ? convertedHeight.toFixed(1) : ''
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white p-6">
       <div className="max-w-md mx-auto">
@@ -127,7 +203,7 @@ const OnboardingPage = ({ step, userData, setUserData, onNext, onPrev, onComplet
 
               <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium mb-3">Weight at surgery ({userData.weightUnit})</label>
+                  <label className="block text-sm font-medium mb-3">Weight at surgery</label>
                   <div className="flex space-x-3">
                     <input
                       type="number"
@@ -140,33 +216,69 @@ const OnboardingPage = ({ step, userData, setUserData, onNext, onPrev, onComplet
                     />
                     <select
                       value={userData.weightUnit}
-                      onChange={(e) => setUserData({...userData, weightUnit: e.target.value})}
+                      onChange={(e) => handleUnitChange('weight', e.target.value)}
                       className="p-4 bg-gray-700/50 border border-gray-600 rounded-2xl text-white focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
                     >
-                      <option value="kg">kg</option>
                       <option value="lbs">lbs</option>
+                      <option value="kg">kg</option>
                     </select>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-3">Height ({userData.heightUnit})</label>
-                  <div className="flex space-x-3">
-                    <input
-                      type="number"
-                      value={userData.height}
-                      onChange={(e) => setUserData({...userData, height: e.target.value})}
-                      className="flex-1 p-4 bg-gray-700/50 border border-gray-600 rounded-2xl text-white placeholder-gray-400 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
-                      placeholder={userData.heightUnit === 'cm' ? '170' : '67'}
-                      min="1"
-                    />
+                  <label className="block text-sm font-medium mb-3">Height</label>
+                  {userData.heightUnit === 'in' ? (
+                    <div className="space-y-3">
+                      <div className="flex space-x-3">
+                        <div className="flex-1">
+                          <input
+                            type="number"
+                            value={getFeetFromHeight()}
+                            onChange={(e) => handleHeightChange('feet', e.target.value)}
+                            className="w-full p-4 bg-gray-700/50 border border-gray-600 rounded-2xl text-white placeholder-gray-400 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                            placeholder="5"
+                            min="0"
+                            max="8"
+                          />
+                          <span className="text-xs text-gray-400 mt-1 block">feet</span>
+                        </div>
+                        <div className="flex-1">
+                          <input
+                            type="number"
+                            value={getInchesFromHeight()}
+                            onChange={(e) => handleHeightChange('inches', e.target.value)}
+                            className="w-full p-4 bg-gray-700/50 border border-gray-600 rounded-2xl text-white placeholder-gray-400 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                            placeholder="8"
+                            min="0"
+                            max="11"
+                            step="0.5"
+                          />
+                          <span className="text-xs text-gray-400 mt-1 block">inches</span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex space-x-3">
+                      <input
+                        type="number"
+                        value={userData.height}
+                        onChange={(e) => setUserData({...userData, height: e.target.value})}
+                        className="flex-1 p-4 bg-gray-700/50 border border-gray-600 rounded-2xl text-white placeholder-gray-400 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                        placeholder="170"
+                        min="1"
+                      />
+                      <span className="p-4 text-white">cm</span>
+                    </div>
+                  )}
+
+                  <div className="mt-3">
                     <select
                       value={userData.heightUnit}
-                      onChange={(e) => setUserData({...userData, heightUnit: e.target.value})}
-                      className="p-4 bg-gray-700/50 border border-gray-600 rounded-2xl text-white focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                      onChange={(e) => handleUnitChange('height', e.target.value)}
+                      className="w-full p-3 bg-gray-700/50 border border-gray-600 rounded-xl text-white focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
                     >
-                      <option value="cm">cm</option>
-                      <option value="in">in</option>
+                      <option value="in">Feet & Inches</option>
+                      <option value="cm">Centimeters</option>
                     </select>
                   </div>
                 </div>
@@ -199,6 +311,15 @@ const OnboardingPage = ({ step, userData, setUserData, onNext, onPrev, onComplet
                   <div className="flex justify-between">
                     <span className="text-gray-400">Starting weight:</span>
                     <span className="font-medium">{userData.surgeryWeight} {userData.weightUnit}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Height:</span>
+                    <span className="font-medium">
+                      {userData.heightUnit === 'in'
+                        ? `${getFeetFromHeight()}'${getInchesFromHeight()}"`
+                        : `${userData.height} cm`
+                      }
+                    </span>
                   </div>
                 </div>
               </div>
